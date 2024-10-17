@@ -1,0 +1,33 @@
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# Load the fine-tuned model and tokenizer
+model_path = "./flood-dialoGPT"
+model = AutoModelForCausalLM.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+# Function to generate a response
+def generate_response(prompt, max_length=100):
+    # Tokenize the input prompt
+    input_ids = tokenizer.encode(prompt + tokenizer.eos_token, return_tensors="pt")
+    
+    # Generate a response using the model
+    output = model.generate(
+        input_ids,
+        max_length=max_length,
+        pad_token_id=tokenizer.eos_token_id,
+        no_repeat_ngram_size=2,  # Avoid repeating phrases
+        do_sample=True,          # Enable sampling to get more diverse outputs
+        top_k=50,                # Limit to top-k sampling
+        top_p=0.95,              # Nucleus sampling
+        temperature=0.7          # Adjust randomness
+    )
+    
+    # Decode the generated tokens
+    response = tokenizer.decode(output[:, input_ids.shape[-1]:][0], skip_special_tokens=True)
+    return response
+
+# Example usage
+user_input = "How can I stay safe during a flood?"
+response = generate_response(user_input)
+print(f"User: {user_input}")
+print(f"Bot: {response}")
