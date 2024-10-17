@@ -1,4 +1,5 @@
 import os
+import json  # Import JSON module for reading the conversation file
 os.environ["USE_TF"] = "0"  # Ensure transformers uses PyTorch only
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
@@ -8,13 +9,15 @@ from torch.utils.data import Dataset
 output_dir = "./flood-dialoGPT"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
+    
+logging_dir='./logs'
+if not os.path.exists(logging_dir):
+    os.makedirs(logging_dir)
 
-# Step 1: Define Sample Conversations
-conversations = [
-    {"input": "What should I do during a flood?", "response": "Stay indoors, avoid flooded areas, and listen to emergency services."},
-    {"input": "How can I prepare for a flood?", "response": "Keep emergency supplies, know your evacuation routes, and stay informed."},
-    {"input": "What are the common signs of a flood?", "response": "Rising water levels, continuous rain, and overflowing rivers."},
-]
+# Step 1: Load Sample Conversations from JSON File
+conversation_file = "conversations.json"  # Specify your JSON file name
+with open(conversation_file, "r") as file:
+    conversations = json.load(file)
 
 # Step 2: Create a Custom Dataset Class
 class FloodDataset(Dataset):
@@ -65,15 +68,20 @@ if tokenizer.pad_token is None:
 # Step 4: Prepare the Dataset
 train_dataset = FloodDataset(conversations, tokenizer)
 
-# Step 5: Set Training Arguments
+# Step 5: Set Training Arguments (Adjustable Hyperparameters)
 training_args = TrainingArguments(
     output_dir=output_dir,
-    per_device_train_batch_size=1,
-    num_train_epochs=1,
-    save_steps=10,  # Save more frequently for testing
-    save_total_limit=2,  # Save only 2 checkpoints at most
-    logging_dir='./logs',
-    logging_steps=10,  # Log every 10 steps
+    per_device_train_batch_size=1,  # Controls batch size per device; adjust for larger datasets
+    num_train_epochs=1,             # Number of epochs; more epochs for better learning on larger datasets
+    save_steps=10,                  # How frequently checkpoints are saved
+    save_total_limit=2,             # Maximum number of checkpoints to keep
+    logging_dir=logging_dir,
+    logging_steps=10,               # How frequently logs are printed during training
+    # Suggested Values:
+    # - `per_device_train_batch_size`: Try values like 4, 8, or 16 based on your GPU memory.
+    # - `num_train_epochs`: For larger datasets, try 3-5 epochs or more for better convergence.
+    # - `save_steps`: Increase to 100 or 1000 for longer training to save checkpoints less frequently.
+    # - `temperature` (in `Prediction.py`): Decrease (e.g., 0.5) for more predictable responses, increase (e.g., 1.0) for more creative responses.
 )
 
 # Step 6: Initialize Trainer and Start Training
