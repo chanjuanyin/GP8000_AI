@@ -6,11 +6,10 @@ model_path = "./flood-dialoGPT"
 model = AutoModelForCausalLM.from_pretrained(model_path)
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-# Load user input from a JSON file
+# Load user inputs from a JSON file (now expects a list of inputs)
 user_input_file = "user_input.json"
 with open(user_input_file, "r") as file:
-    user_input_data = json.load(file)
-user_input = user_input_data["user_input"]
+    user_inputs = json.load(file)
 
 # Function to generate a response (Adjustable Hyperparameters)
 def generate_response(prompt):  # Controls response length; increase for longer outputs
@@ -37,7 +36,8 @@ def generate_response(prompt):  # Controls response length; increase for longer 
     response = tokenizer.decode(output[:, input_ids.shape[-1]:][0], skip_special_tokens=True)
     return response
 
-# Example usage
-response = generate_response(user_input)
-print(f"User: {user_input}")
-print(f"Bot: {response}")
+# Loop through all user inputs and generate responses
+for user_input in user_inputs:
+    response = generate_response(user_input)
+    print(f"User: {user_input}")
+    print(f"Bot: {response}\n")
