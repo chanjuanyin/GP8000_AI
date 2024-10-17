@@ -1,5 +1,3 @@
-# GP8000_AI
-
 # Flood Response Chatbot
 
 This project implements a conversational AI chatbot fine-tuned on flood-related information using the DialoGPT-medium model. The chatbot can provide guidance and answer user queries about flood safety, preparation, and general information. It consists of two main scripts:
